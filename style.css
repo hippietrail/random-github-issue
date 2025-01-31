@@ -1,0 +1,92 @@
+body {
+    font-family: monospace;
+    background-color: #f0f0f0;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#button-container {
+    display: flex; /* Use flexbox for layout */
+    align-items: center; /* Center items vertically */
+    justify-content: space-between; /* Space between input and buttons */
+    padding: 0 20px; /* Add padding to the left and right */
+}
+
+#repo-input {
+    flex-grow: 1; /* Allow input to take up remaining space */
+    height: 60px; /* Match height with buttons */
+    line-height: 60px; /* Match line-height to height */
+    font-size: 18px; /* Increase font size */
+    padding: 0 15px; /* Add horizontal padding */
+    border: 1px solid #ccc; /* Light gray border */
+}
+
+#button-group {
+    display: flex; /* Use flexbox for button group */
+}
+
+#button-container button {
+    height: 60px; /* Increase height */
+    line-height: 60px; /* Match line-height to new height */
+    font-size: 18px; /* Increase font size */
+    background-color: #e0e0e0; /* Neutral gray button background */
+    color: black;
+    border: 1px solid #ccc; /* Light gray border */
+    padding: 0 15px; /* Add horizontal padding for left and right */
+    cursor: pointer;
+    margin-left: 5px; /* Space between buttons */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Slight 3D effect */
+    transition: background-color 0.3s; /* Smooth background color transition */
+}
+
+#button-container button:hover {
+    background-color: #d0d0d0;
+}
+
+#terminal {
+    border: 1px solid #333;
+    background-color: #ffffff;
+    padding: 10px;
+    height: calc(100vh - 80px);
+    overflow-y: auto; /* Allow scrolling within the terminal */
+    box-sizing: border-box; /* Include padding and border in the element's total height */
+    display: flex; /* Keep display flex for layout */
+    flex-direction: column; /* Change to default column direction */
+}
+
+#output {
+    white-space: pre-wrap; /* Preserve whitespace and wrap text */
+    color: #333; /* Dark gray text in the terminal */
+    font-size: 18px; /* Increase font size for issue entries */
+    flex-grow: 1; /* Allow output to take up available space */
+    overflow-y: auto; /* Allow scrolling */
+}
+
+#output div:nth-child(odd) {
+    background-color: #f0f0f0; /* Light gray for odd entries */
+}
+
+#output div:nth-child(even) {
+    background-color: #e9e9e9; /* Slightly darker gray for even entries */
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.dice {
+    display: inline-block; /* Ensure the span behaves like a block element for transformation */
+    transition: transform 1s linear; /* Smooth transition for the spin */
+}
+
+.spin .dice {
+    animation: spin 1s linear infinite; /* Spin for 1 second, infinitely */
+}
