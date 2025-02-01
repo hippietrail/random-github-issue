@@ -1,4 +1,4 @@
-# GitHub Issue Tracker
+# Random GitHub Issue
 
 ![dice GitHub dice](github-logo-with-dice.png)
 
