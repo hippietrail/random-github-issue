@@ -1,6 +1,6 @@
 # GitHub Issue Tracker
 
-<span style="font-size: 8em;">🎲</span> ![GitHub Logo](github-mark.png) <span style="font-size: 8em;">🎲</span>
+![dice GitHub dice](github-logo-with-dice.png)
 
 ## Overview
 A simple web app that lets you fetch random issues from GitHub repositories. Just input a repository owner/name pair, roll the dice, and view issues in haphazard manner.
