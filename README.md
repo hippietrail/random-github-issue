@@ -23,6 +23,7 @@ A simple web app that lets you fetch random issues from GitHub repositories. Jus
 - CSS
 - TypeScript
 - GitHub API
+- Varius free LLMs
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
