@@ -1,9 +1,18 @@
 const fetchButton = document.getElementById('fetch-issue') as HTMLButtonElement;
 const clearButton = document.getElementById('clear-output') as HTMLButtonElement;
-const output = document.getElementById('output') as HTMLDivElement;
+const outputDiv = document.getElementById('output') as HTMLDivElement;
 const repoInput = document.getElementById('repo-input') as HTMLInputElement;
-
 let entryCount = 0; // Counter to track the number of entries
+let prevIssue = -1;
+
+interface GitHubIssue {
+    number: number;
+    title: string;
+    html_url: string;
+    pull_request?: {
+        url: string;
+    };
+}
 
 async function fetchRandomIssue(repo: string): Promise<void> {
     if (!repo.includes('/')) {
@@ -12,19 +21,26 @@ async function fetchRandomIssue(repo: string): Promise<void> {
     }
 
     fetchButton.disabled = true;
-    // fetchButton.textContent = '🎲🎲';//'Fetching...';
 
     try {
         const response = await fetch(`https://api.github.com/repos/${repo}/issues`);
         if (!response.ok) {
             throw new Error(`Failed to fetch issues: ${response.statusText}`);
         }
-        const issues = await response.json();
+        const allIssues = await response.json() as GitHubIssue[];
+        const issues = allIssues.filter((issue: GitHubIssue) => !issue.pull_request);
         if (issues.length === 0) {
             appendOutput('No issues found.', undefined, undefined);
         } else {
-            const randomIssue = issues[Math.floor(Math.random() * issues.length)];
-            appendOutput(randomIssue.title, randomIssue.number, randomIssue.html_url);
+            // Try three times in case we chose the same issue twice in a row
+            for (let i = 0; i < 3; i++) {
+                const randomIssue = issues[Math.floor(Math.random() * issues.length)];
+                if (randomIssue.number !== prevIssue) {
+                    appendOutput(randomIssue.title, randomIssue.number, randomIssue.html_url);
+                    prevIssue = randomIssue.number;
+                    break;
+                }
+            }
         }
     } catch (error) {
         if (error instanceof Error) {
@@ -34,7 +50,6 @@ async function fetchRandomIssue(repo: string): Promise<void> {
         }
     } finally {
         fetchButton.disabled = false;
-        // fetchButton.textContent = '🎲';
 
         // Wait for the animation to finish before removing the spin class
         setTimeout(() => {
@@ -47,12 +62,12 @@ function appendOutput(title: string, issueNumber?: number, url?: string) {
     const newOutput = document.createElement('div');
     newOutput.innerHTML = `<a href="${url}" target="_blank" style="color: inherit; text-decoration: none;">${issueNumber !== undefined ? `#${issueNumber} - ` : ''}${title}</a>`;
     
-    // Alternate background color for every second entry
+    // Alternate background colour for every second entry
     if (entryCount % 2 === 1) {
-        newOutput.style.backgroundColor = '#f9f9f9'; // Light gray for even entries
+        newOutput.style.backgroundColor = '#f9f9f9'; // Light grey for even entries
     }
     
-    output.appendChild(newOutput);
+    outputDiv.appendChild(newOutput);
     entryCount++; // Increment the counter
 
     // Scroll the terminal to the bottom
@@ -60,8 +75,8 @@ function appendOutput(title: string, issueNumber?: number, url?: string) {
     terminal.scrollTop = terminal.scrollHeight;
 }
 
-if (fetchButton && output && repoInput) {
-    fetchButton.addEventListener('click', function () {
+if (fetchButton && outputDiv && repoInput) {
+    fetchButton.addEventListener('click', () => {
         const repo = repoInput.value.trim();
         if (repo) {
             fetchButton.classList.add('spin'); // Add spin class to start spinning
@@ -72,8 +87,8 @@ if (fetchButton && output && repoInput) {
     });
 }
 
-if (clearButton && output) {
-    clearButton.addEventListener('click', function () {
-        output.innerHTML = '';
+if (clearButton && outputDiv) {
+    clearButton.addEventListener('click', () => {
+        outputDiv.innerHTML = '';
     });
 }
