@@ -4,6 +4,20 @@ const outputDiv = document.getElementById('output') as HTMLDivElement;
 const repoInput = document.getElementById('repo-input') as HTMLInputElement;
 let entryCount = 0; // Counter to track the number of entries
 let prevIssue = -1;
+let optionKeyHeld = false;
+
+// Add event listeners for Option key
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Alt' || e.key === 'Option') {
+        optionKeyHeld = true;
+    }
+});
+
+window.addEventListener('keyup', (e) => {
+    if (e.key === 'Alt' || e.key === 'Option') {
+        optionKeyHeld = false;
+    }
+});
 
 interface GitHubIssue {
     number: number;
@@ -14,7 +28,52 @@ interface GitHubIssue {
     };
 }
 
-async function fetchRandomIssue(repo: string): Promise<void> {
+let allIssuesGlobal: GitHubIssue[] = [];
+
+async function fetchGitHubIssues(repo: string): Promise<GitHubIssue[]> {
+    appendOutput('fetchGitHubIssues()', undefined, undefined, true)
+    if (allIssuesGlobal.length > 0) {
+        appendOutput('Using cached issues.', undefined, undefined);
+        return allIssuesGlobal;
+    }
+
+    appendOutput('Fetching issues...', undefined, undefined);
+    
+    let url = new URL('https://api.github.com');
+    url.pathname = `/repos/${repo}/issues`;
+    url.searchParams.set('per_page', '100');
+    url.searchParams.set('page', '1');
+
+    let allIssues: GitHubIssue[] = [];
+    let currentPage = 1;
+
+    while (true) {
+        appendOutput(`Fetching page ${currentPage}...`, undefined, undefined, true);
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch issues (page ${currentPage}): ${response.statusText}`);
+        }
+
+        const issues = await response.json() as GitHubIssue[];
+        appendOutput(`Fetched page ${currentPage}, ${issues.length} more issues...`, undefined, undefined, true);
+        allIssues = [...allIssues, ...issues];
+
+        const linkHeader = response.headers.get('Link');
+        const nextLink = linkHeader?.match(/<(.*)>; rel="next"/)?.[1];
+        
+        if (!nextLink) {
+            break;
+        }
+
+        url = new URL(nextLink);
+        currentPage++;
+    }
+
+    allIssuesGlobal = allIssues;
+    return allIssues;
+}
+
+async function getRandomIssue(repo: string): Promise<void> {
     if (!repo.includes('/')) {
         appendOutput('Invalid repository format. Use "owner/repo".', undefined, undefined);
         return;
@@ -23,11 +82,7 @@ async function fetchRandomIssue(repo: string): Promise<void> {
     fetchButton.disabled = true;
 
     try {
-        const response = await fetch(`https://api.github.com/repos/${repo}/issues`);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch issues: ${response.statusText}`);
-        }
-        const allIssues = await response.json() as GitHubIssue[];
+        const allIssues = await fetchGitHubIssues(repo);
         const issues = allIssues.filter((issue: GitHubIssue) => !issue.pull_request);
         if (issues.length === 0) {
             appendOutput('No issues found.', undefined, undefined);
@@ -58,13 +113,21 @@ async function fetchRandomIssue(repo: string): Promise<void> {
     }
 }
 
-function appendOutput(title: string, issueNumber?: number, url?: string) {
+function appendOutput(title: string, issueNumber?: number, url?: string, debug?: boolean) {
     const newOutput = document.createElement('div');
     newOutput.innerHTML = `<a href="${url}" target="_blank" style="color: inherit; text-decoration: none;">${issueNumber !== undefined ? `#${issueNumber} - ` : ''}${title}</a>`;
     
     // Alternate background colour for every second entry
     if (entryCount % 2 === 1) {
         newOutput.style.backgroundColor = '#f9f9f9'; // Light grey for even entries
+    }
+    
+    // Only show debug messages if Option key is held down
+    if (debug && !optionKeyHeld) return;
+    
+    // Show debug messages in red
+    if (debug) {
+        newOutput.style.color = 'red';
     }
     
     outputDiv.appendChild(newOutput);
@@ -80,7 +143,7 @@ if (fetchButton && outputDiv && repoInput) {
         const repo = repoInput.value.trim();
         if (repo) {
             fetchButton.classList.add('spin'); // Add spin class to start spinning
-            fetchRandomIssue(repo);
+            getRandomIssue(repo);
         } else {
             appendOutput('Please enter a repository name.', undefined, undefined);
         }
