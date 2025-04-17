@@ -2,6 +2,10 @@ const fetchButton = document.getElementById('fetch-issue') as HTMLButtonElement;
 const clearButton = document.getElementById('clear-output') as HTMLButtonElement;
 const outputDiv = document.getElementById('output') as HTMLDivElement;
 const repoInput = document.getElementById('repo-input') as HTMLInputElement;
+const totalCount = document.getElementById('total-count') as HTMLSpanElement;
+const prsCount = document.getElementById('prs-count') as HTMLSpanElement;
+const issuesCount = document.getElementById('issues-count') as HTMLSpanElement;
+const openIssuesCount = document.getElementById('open-issues-count') as HTMLSpanElement;
 let entryCount = 0; // Counter to track the number of entries
 let prevIssue = -1;
 let optionKeyHeld = false;
@@ -20,6 +24,7 @@ window.addEventListener('keyup', (e) => {
 });
 
 interface GitHubIssue {
+    state: string;
     number: number;
     title: string;
     html_url: string;
@@ -33,16 +38,17 @@ let allIssuesGlobal: GitHubIssue[] = [];
 async function fetchGitHubIssues(repo: string): Promise<GitHubIssue[]> {
     appendOutput('fetchGitHubIssues()', undefined, undefined, true)
     if (allIssuesGlobal.length > 0) {
-        appendOutput('Using cached issues.', undefined, undefined);
+        appendOutput('Using cached issues.', undefined, undefined, true);
         return allIssuesGlobal;
     }
 
-    appendOutput('Fetching issues...', undefined, undefined);
+    appendOutput('Fetching issues...', undefined, undefined, true);
     
     let url = new URL('https://api.github.com');
     url.pathname = `/repos/${repo}/issues`;
     url.searchParams.set('per_page', '100');
     url.searchParams.set('page', '1');
+    url.searchParams.set('state', 'all'); // open, closed, or all
 
     let allIssues: GitHubIssue[] = [];
     let currentPage = 1;
@@ -57,6 +63,7 @@ async function fetchGitHubIssues(repo: string): Promise<GitHubIssue[]> {
         const issues = await response.json() as GitHubIssue[];
         appendOutput(`Fetched page ${currentPage}, ${issues.length} more issues...`, undefined, undefined, true);
         allIssues = [...allIssues, ...issues];
+        updateStatusFields(allIssues);
 
         const linkHeader = response.headers.get('Link');
         const nextLink = linkHeader?.match(/<(.*)>; rel="next"/)?.[1];
@@ -65,11 +72,14 @@ async function fetchGitHubIssues(repo: string): Promise<GitHubIssue[]> {
             break;
         }
 
+        appendOutput(`Next link: ${nextLink}...`, undefined, undefined, true);
+
         url = new URL(nextLink);
         currentPage++;
     }
 
     allIssuesGlobal = allIssues;
+
     return allIssues;
 }
 
@@ -83,13 +93,13 @@ async function getRandomIssue(repo: string): Promise<void> {
 
     try {
         const allIssues = await fetchGitHubIssues(repo);
-        const issues = allIssues.filter((issue: GitHubIssue) => !issue.pull_request);
-        if (issues.length === 0) {
+        const openIssues = allIssues.filter((issue: GitHubIssue) => !issue.pull_request && issue.state === 'open');
+        if (openIssues.length === 0) {
             appendOutput('No issues found.', undefined, undefined);
         } else {
             // Try three times in case we chose the same issue twice in a row
             for (let i = 0; i < 3; i++) {
-                const randomIssue = issues[Math.floor(Math.random() * issues.length)];
+                const randomIssue = openIssues[Math.floor(Math.random() * openIssues.length)];
                 if (randomIssue.number !== prevIssue) {
                     appendOutput(randomIssue.title, randomIssue.number, randomIssue.html_url);
                     prevIssue = randomIssue.number;
@@ -111,6 +121,18 @@ async function getRandomIssue(repo: string): Promise<void> {
             fetchButton.classList.remove('spin'); // Remove spin class to stop spinning
         }, 1000); // Match this duration to the CSS animation duration (1s)
     }
+}
+
+function updateStatusFields(issues: GitHubIssue[]) {
+    const total = issues.length;
+    const prs = issues.filter(issue => issue.pull_request).length;
+    const allIssues = issues.filter(issue => !issue.pull_request).length;
+    const openIssues = issues.filter(issue => !issue.pull_request && issue.state === 'open').length;
+
+    totalCount.textContent = `Total: ${total}`;
+    prsCount.textContent = `PRs: ${prs}`;
+    issuesCount.textContent = `Issues: ${allIssues}`;
+    openIssuesCount.textContent = `Open: ${openIssues}`;
 }
 
 function appendOutput(title: string, issueNumber?: number, url?: string, debug?: boolean) {

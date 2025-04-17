@@ -9,10 +9,16 @@
 <body>
     <div id="button-container">
         <input type="text" id="repo-input" placeholder="Enter repository (e.g., owner/repo)">
-        <div id="button-group">
+        <span id="status-fields">
+            <span id="total-count">Total: 0</span>
+            <span id="prs-count">PRs: 0</span>
+            <span id="issues-count">Issues: 0</span>
+            <span id="open-issues-count">Open: 0</span>
+        </span>
+        <span id="button-group">
             <button id="fetch-issue"><span class="dice">🎲</span></button>
             <button id="clear-output">Clear</button>
-        </div>
+        </span>
     </div>
     <div id="terminal">
         <div id="output"></div>
