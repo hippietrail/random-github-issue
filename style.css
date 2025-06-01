@@ -109,3 +109,18 @@ body {
 .spin .dice {
     animation: spin 1s linear infinite; /* Spin for 1 second, infinitely */
 }
+
+#button-container.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+#button-container.disabled #repo-input,
+#button-container.disabled button {
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+#button-container.disabled #repo-input {
+    background-color: #f0f0f0;
+}

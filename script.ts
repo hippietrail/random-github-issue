@@ -89,6 +89,7 @@ async function getRandomIssue(repo: string): Promise<void> {
         return;
     }
 
+    setLoadingState(true);
     fetchButton.disabled = true;
 
     try {
@@ -114,6 +115,7 @@ async function getRandomIssue(repo: string): Promise<void> {
             appendOutput('Unknown error occurred.', undefined, undefined);
         }
     } finally {
+        setLoadingState(false);
         fetchButton.disabled = false;
 
         // Wait for the animation to finish before removing the spin class
@@ -176,4 +178,17 @@ if (clearButton && outputDiv) {
     clearButton.addEventListener('click', () => {
         outputDiv.innerHTML = '';
     });
+}
+
+function setLoadingState(isLoading: boolean) {
+    const container = document.getElementById('button-container');
+    const repoInput = document.getElementById('repo-input') as HTMLInputElement;
+    
+    if (isLoading) {
+        container?.classList.add('disabled');
+        repoInput.disabled = true;
+    } else {
+        container?.classList.remove('disabled');
+        repoInput.disabled = false;
+    }
 }
