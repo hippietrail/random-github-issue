@@ -1,3 +1,6 @@
+const REPO_HISTORY_KEY = 'githubRandomIssueRepos';
+const MAX_HISTORY = 5;
+
 interface GitHubIssue {
     state: string;
     number: number;
@@ -165,6 +168,7 @@ async function getRandomIssue(repo: string): Promise<void> {
 function handleFetchClick() {
     const repo = repoInput.value.trim();
     if (repo) {
+        saveToRepoHistory(repo);
         fetchButton.classList.add('spin');
         getRandomIssue(repo);
     } else {
@@ -174,6 +178,23 @@ function handleFetchClick() {
 
 function handleClearClick() {
     outputDiv.innerHTML = '';
+}
+
+function saveToRepoHistory(repo: string) {
+    let history = JSON.parse(localStorage.getItem(REPO_HISTORY_KEY) || '[]');
+    // Remove if exists and add to beginning
+    history = [repo, ...history.filter((r: string) => r !== repo)].slice(0, MAX_HISTORY);
+    localStorage.setItem(REPO_HISTORY_KEY, JSON.stringify(history));
+    updateRepoHistory(history);
+}
+
+function updateRepoHistory(history: string[]) {
+    const datalist = document.getElementById('repo-history');
+    if (datalist) {
+        datalist.innerHTML = history
+            .map(repo => `<option value="${repo}">${repo}</option>`)
+            .join('');
+    }
 }
 
 function initialize() {
@@ -203,6 +224,9 @@ function initialize() {
             handleFetchClick();
         }
     });
+
+    const savedHistory = JSON.parse(localStorage.getItem(REPO_HISTORY_KEY) || '[]');
+    updateRepoHistory(savedHistory);
 }
 
 // Start the app

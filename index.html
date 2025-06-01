@@ -8,7 +8,10 @@
 </head>
 <body>
     <div id="button-container">
-        <input type="text" id="repo-input" placeholder="Enter repository (e.g., owner/repo)">
+        <input type="text" id="repo-input" list="repo-history" placeholder="Enter repository (e.g., owner/repo)">
+        <datalist id="repo-history">
+            <!-- Options will be added by JavaScript -->
+        </datalist>
         <span id="status-fields">
             <span id="total-count">Total: 0</span>
             <span id="prs-count">PRs: 0</span>
