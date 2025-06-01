@@ -197,6 +197,12 @@ function initialize() {
             optionKeyHeld = false;
         }
     });
+
+    repoInput?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            handleFetchClick();
+        }
+    });
 }
 
 // Start the app
