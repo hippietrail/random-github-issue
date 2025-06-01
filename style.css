@@ -1,3 +1,4 @@
+/* 1. Base Styles */
 body {
     font-family: monospace;
     background-color: #f0f0f0;
@@ -8,44 +9,18 @@ body {
     overflow: hidden;
 }
 
+/* 2. Layout */
 #button-container {
-    display: flex; /* Use flexbox for layout */
-    align-items: center; /* Center items vertically */
-    justify-content: space-between; /* Space between input and buttons */
-    padding: 0 20px; /* Add padding to the left and right */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
     gap: 10px;
 }
 
-#repo-input {
-    flex-grow: 1; /* Allow input to take up remaining space */
-    height: 60px; /* Match height with buttons */
-    line-height: 60px; /* Match line-height to height */
-    font-size: 18px; /* Increase font size */
-    padding: 0 15px; /* Add horizontal padding */
-    border: 1px solid #ccc; /* Light gray border */
-}
-
 #button-group {
-    display: flex; /* Use flexbox for button group */
+    display: flex;
     gap: 5px;
-}
-
-#button-container button {
-    height: 60px; /* Increase height */
-    line-height: 60px; /* Match line-height to new height */
-    font-size: 18px; /* Increase font size */
-    background-color: #e0e0e0; /* Neutral gray button background */
-    color: black;
-    border: 1px solid #ccc; /* Light gray border */
-    padding: 0 15px; /* Add horizontal padding for left and right */
-    cursor: pointer;
-    margin-left: 5px; /* Space between buttons */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Slight 3D effect */
-    transition: background-color 0.3s; /* Smooth background color transition */
-}
-
-#button-container button:hover {
-    background-color: #d0d0d0;
 }
 
 #terminal {
@@ -53,26 +28,50 @@ body {
     background-color: #ffffff;
     padding: 10px;
     height: calc(100vh - 80px);
-    overflow-y: auto; /* Allow scrolling within the terminal */
-    box-sizing: border-box; /* Include padding and border in the element's total height */
-    display: flex; /* Keep display flex for layout */
-    flex-direction: column; /* Change to default column direction */
+    overflow-y: auto;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 3. Components */
+#repo-input {
+    flex-grow: 1;
+    height: 60px;
+    line-height: 60px;
+    font-size: 18px;
+    padding: 0 15px;
+    border: 1px solid #ccc;
+}
+
+#button-container button {
+    height: 60px;
+    line-height: 60px;
+    font-size: 18px;
+    background-color: #e0e0e0;
+    color: black;
+    border: 1px solid #ccc;
+    padding: 0 15px;
+    cursor: pointer;
+    margin-left: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s;
 }
 
 #output {
-    white-space: pre-wrap; /* Preserve whitespace and wrap text */
-    color: #333; /* Dark gray text in the terminal */
-    font-size: 18px; /* Increase font size for issue entries */
-    flex-grow: 1; /* Allow output to take up available space */
-    overflow-y: auto; /* Allow scrolling */
+    white-space: pre-wrap;
+    color: #333;
+    font-size: 18px;
+    flex-grow: 1;
+    overflow-y: auto;
 }
 
 #output div:nth-child(odd) {
-    background-color: #f0f0f0; /* Light gray for odd entries */
+    background-color: #f0f0f0;
 }
 
 #output div:nth-child(even) {
-    background-color: #e9e9e9; /* Slightly darker gray for even entries */
+    background-color: #e9e9e9;
 }
 
 #status-fields {
@@ -88,26 +87,13 @@ body {
     background-color: #f8f8f8;
 }
 
+/* 4. States */
+#button-container button:hover {
+    background-color: #d0d0d0;
+}
+
 #status-fields span:hover {
     background-color: #e8e8e8;
-}
-
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-.dice {
-    display: inline-block; /* Ensure the span behaves like a block element for transformation */
-    transition: transform 1s linear; /* Smooth transition for the spin */
-}
-
-.spin .dice {
-    animation: spin 1s linear infinite; /* Spin for 1 second, infinitely */
 }
 
 #button-container.disabled {
@@ -123,4 +109,16 @@ body {
 
 #button-container.disabled #repo-input {
     background-color: #f0f0f0;
+}
+
+/* 5. Animations */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.spin .dice {
+    display: inline-block;
+    transition: transform 1s linear;
+    animation: spin 1s linear infinite;
 }

@@ -1,28 +1,3 @@
-const fetchButton = document.getElementById('fetch-issue') as HTMLButtonElement;
-const clearButton = document.getElementById('clear-output') as HTMLButtonElement;
-const outputDiv = document.getElementById('output') as HTMLDivElement;
-const repoInput = document.getElementById('repo-input') as HTMLInputElement;
-const totalCount = document.getElementById('total-count') as HTMLSpanElement;
-const prsCount = document.getElementById('prs-count') as HTMLSpanElement;
-const issuesCount = document.getElementById('issues-count') as HTMLSpanElement;
-const openIssuesCount = document.getElementById('open-issues-count') as HTMLSpanElement;
-let entryCount = 0; // Counter to track the number of entries
-let prevIssue = -1;
-let optionKeyHeld = false;
-
-// Add event listeners for Option key
-window.addEventListener('keydown', (e) => {
-    if (e.key === 'Alt' || e.key === 'Option') {
-        optionKeyHeld = true;
-    }
-});
-
-window.addEventListener('keyup', (e) => {
-    if (e.key === 'Alt' || e.key === 'Option') {
-        optionKeyHeld = false;
-    }
-});
-
 interface GitHubIssue {
     state: string;
     number: number;
@@ -33,7 +8,69 @@ interface GitHubIssue {
     };
 }
 
+const fetchButton = document.getElementById('fetch-issue') as HTMLButtonElement;
+const clearButton = document.getElementById('clear-output') as HTMLButtonElement;
+const outputDiv = document.getElementById('output') as HTMLDivElement;
+const repoInput = document.getElementById('repo-input') as HTMLInputElement;
+const totalCount = document.getElementById('total-count') as HTMLSpanElement;
+const prsCount = document.getElementById('prs-count') as HTMLSpanElement;
+const issuesCount = document.getElementById('issues-count') as HTMLSpanElement;
+const openIssuesCount = document.getElementById('open-issues-count') as HTMLSpanElement;
+
+let entryCount = 0; // Counter to track the number of entries
+let prevIssue = -1;
+let optionKeyHeld = false;
 let allIssuesGlobal: GitHubIssue[] = [];
+
+function setLoadingState(isLoading: boolean) {
+    const container = document.getElementById('button-container');
+    const repoInput = document.getElementById('repo-input') as HTMLInputElement;
+    
+    if (isLoading) {
+        container?.classList.add('disabled');
+        repoInput.disabled = true;
+    } else {
+        container?.classList.remove('disabled');
+        repoInput.disabled = false;
+    }
+}
+
+function updateStatusFields(issues: GitHubIssue[]) {
+    const total = issues.length;
+    const prs = issues.filter(issue => issue.pull_request).length;
+    const allIssues = issues.filter(issue => !issue.pull_request).length;
+    const openIssues = issues.filter(issue => !issue.pull_request && issue.state === 'open').length;
+
+    totalCount.textContent = `Total: ${total}`;
+    prsCount.textContent = `PRs: ${prs}`;
+    issuesCount.textContent = `Issues: ${allIssues}`;
+    openIssuesCount.textContent = `Open: ${openIssues}`;
+}
+
+function appendOutput(title: string, issueNumber?: number, url?: string, debug?: boolean) {
+    const newOutput = document.createElement('div');
+    newOutput.innerHTML = `<a href="${url}" target="_blank" style="color: inherit; text-decoration: none;">${issueNumber !== undefined ? `#${issueNumber} - ` : ''}${title}</a>`;
+    
+    // Alternate background colour for every second entry
+    if (entryCount % 2 === 1) {
+        newOutput.style.backgroundColor = '#f9f9f9'; // Light grey for even entries
+    }
+    
+    // Only show debug messages if Option key is held down
+    if (debug && !optionKeyHeld) return;
+    
+    // Show debug messages in red
+    if (debug) {
+        newOutput.style.color = 'red';
+    }
+    
+    outputDiv.appendChild(newOutput);
+    entryCount++; // Increment the counter
+
+    // Scroll the terminal to the bottom
+    const terminal = document.getElementById('terminal') as HTMLDivElement;
+    terminal.scrollTop = terminal.scrollHeight;
+}
 
 async function fetchGitHubIssues(repo: string): Promise<GitHubIssue[]> {
     appendOutput('fetchGitHubIssues()', undefined, undefined, true)
@@ -125,70 +162,42 @@ async function getRandomIssue(repo: string): Promise<void> {
     }
 }
 
-function updateStatusFields(issues: GitHubIssue[]) {
-    const total = issues.length;
-    const prs = issues.filter(issue => issue.pull_request).length;
-    const allIssues = issues.filter(issue => !issue.pull_request).length;
-    const openIssues = issues.filter(issue => !issue.pull_request && issue.state === 'open').length;
-
-    totalCount.textContent = `Total: ${total}`;
-    prsCount.textContent = `PRs: ${prs}`;
-    issuesCount.textContent = `Issues: ${allIssues}`;
-    openIssuesCount.textContent = `Open: ${openIssues}`;
+function handleFetchClick() {
+    const repo = repoInput.value.trim();
+    if (repo) {
+        fetchButton.classList.add('spin');
+        getRandomIssue(repo);
+    } else {
+        appendOutput('Please enter a repository name.', undefined, undefined);
+    }
 }
 
-function appendOutput(title: string, issueNumber?: number, url?: string, debug?: boolean) {
-    const newOutput = document.createElement('div');
-    newOutput.innerHTML = `<a href="${url}" target="_blank" style="color: inherit; text-decoration: none;">${issueNumber !== undefined ? `#${issueNumber} - ` : ''}${title}</a>`;
-    
-    // Alternate background colour for every second entry
-    if (entryCount % 2 === 1) {
-        newOutput.style.backgroundColor = '#f9f9f9'; // Light grey for even entries
-    }
-    
-    // Only show debug messages if Option key is held down
-    if (debug && !optionKeyHeld) return;
-    
-    // Show debug messages in red
-    if (debug) {
-        newOutput.style.color = 'red';
-    }
-    
-    outputDiv.appendChild(newOutput);
-    entryCount++; // Increment the counter
-
-    // Scroll the terminal to the bottom
-    const terminal = document.getElementById('terminal') as HTMLDivElement;
-    terminal.scrollTop = terminal.scrollHeight;
+function handleClearClick() {
+    outputDiv.innerHTML = '';
 }
 
-if (fetchButton && outputDiv && repoInput) {
-    fetchButton.addEventListener('click', () => {
-        const repo = repoInput.value.trim();
-        if (repo) {
-            fetchButton.classList.add('spin'); // Add spin class to start spinning
-            getRandomIssue(repo);
-        } else {
-            appendOutput('Please enter a repository name.', undefined, undefined);
+function initialize() {
+    if (fetchButton && outputDiv && repoInput) {
+        fetchButton.addEventListener('click', handleFetchClick);
+    }
+
+    if (clearButton && outputDiv) {
+        clearButton.addEventListener('click', handleClearClick);
+    }
+
+    // Option key listeners
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Alt' || e.key === 'Option') {
+            optionKeyHeld = true;
+        }
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if (e.key === 'Alt' || e.key === 'Option') {
+            optionKeyHeld = false;
         }
     });
 }
 
-if (clearButton && outputDiv) {
-    clearButton.addEventListener('click', () => {
-        outputDiv.innerHTML = '';
-    });
-}
-
-function setLoadingState(isLoading: boolean) {
-    const container = document.getElementById('button-container');
-    const repoInput = document.getElementById('repo-input') as HTMLInputElement;
-    
-    if (isLoading) {
-        container?.classList.add('disabled');
-        repoInput.disabled = true;
-    } else {
-        container?.classList.remove('disabled');
-        repoInput.disabled = false;
-    }
-}
+// Start the app
+initialize();
