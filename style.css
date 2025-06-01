@@ -144,3 +144,39 @@ datalist option:hover {
     transition: transform 1s linear;
     animation: spin 1s linear infinite;
 }
+
+.floating-timer {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #ff4444;
+    padding: 15px 20px;
+    border-radius: 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 24px;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    display: none;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+    100% { transform: translateY(0px); }
+}
+
+.timer-display {
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+}
+
+.timer-separator {
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0; }
+}
+

@@ -24,6 +24,8 @@ let entryCount = 0; // Counter to track the number of entries
 let prevIssue = -1;
 let optionKeyHeld = false;
 let allIssuesGlobal: GitHubIssue[] = [];
+let rateLimitResetTime = 0;
+let timerInterval: number | null = null;
 
 function setLoadingState(isLoading: boolean) {
     const container = document.getElementById('button-container');
@@ -88,39 +90,60 @@ async function fetchGitHubIssues(repo: string): Promise<GitHubIssue[]> {
     url.pathname = `/repos/${repo}/issues`;
     url.searchParams.set('per_page', '100');
     url.searchParams.set('page', '1');
-    url.searchParams.set('state', 'all'); // open, closed, or all
+    url.searchParams.set('state', 'all');
 
     let allIssues: GitHubIssue[] = [];
     let currentPage = 1;
 
-    while (true) {
-        appendOutput(`Fetching page ${currentPage}...`, undefined, undefined, true);
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch issues (page ${currentPage}): ${response.statusText}`);
+    try {
+        while (true) {
+            appendOutput(`Fetching page ${currentPage}...`, undefined, undefined, true);
+            const response = await fetch(url);
+            
+            // Check for rate limiting
+            const remaining = response.headers.get('x-ratelimit-remaining');
+            const resetTime = response.headers.get('x-ratelimit-reset');
+            
+            if (response.status === 403 && remaining === '0' && resetTime) {
+                rateLimitResetTime = parseInt(resetTime, 10);
+                if (!timerInterval) {
+                    updateRateLimitTimer();
+                    timerInterval = window.setInterval(updateRateLimitTimer, 500);
+                }
+                throw new Error('API rate limit exceeded. Please wait...');
+            }
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch issues (page ${currentPage}): ${response.statusText}`);
+            }
+
+            const issues = await response.json() as GitHubIssue[];
+            appendOutput(`Fetched page ${currentPage}, ${issues.length} more issues...`, undefined, undefined, true);
+            allIssues = [...allIssues, ...issues];
+            updateStatusFields(allIssues);
+
+            const linkHeader = response.headers.get('Link');
+            const nextLink = linkHeader?.match(/<(.*)>; rel="next"/)?.[1];
+            
+            if (!nextLink) {
+                break;
+            }
+
+            appendOutput(`Next link: ${nextLink}...`, undefined, undefined, true);
+
+            url = new URL(nextLink);
+            currentPage++;
         }
 
-        const issues = await response.json() as GitHubIssue[];
-        appendOutput(`Fetched page ${currentPage}, ${issues.length} more issues...`, undefined, undefined, true);
-        allIssues = [...allIssues, ...issues];
-        updateStatusFields(allIssues);
-
-        const linkHeader = response.headers.get('Link');
-        const nextLink = linkHeader?.match(/<(.*)>; rel="next"/)?.[1];
+        allIssuesGlobal = allIssues;
+        return allIssues;
         
-        if (!nextLink) {
-            break;
+    } catch (error) {
+        if (error instanceof Error) {
+            appendOutput(`Error: ${error.message}`, undefined, undefined);
         }
-
-        appendOutput(`Next link: ${nextLink}...`, undefined, undefined, true);
-
-        url = new URL(nextLink);
-        currentPage++;
+        throw error;
     }
-
-    allIssuesGlobal = allIssues;
-
-    return allIssues;
 }
 
 async function getRandomIssue(repo: string): Promise<void> {
@@ -195,6 +218,31 @@ function updateRepoHistory(history: string[]) {
             .map(repo => `<option value="${repo}">${repo}</option>`)
             .join('');
     }
+}
+
+function updateRateLimitTimer() {
+    const timerElement = document.getElementById('rate-limit-timer');
+    if (!timerElement) return;
+
+    const now = Math.floor(Date.now() / 1000);
+    const timeLeft = Math.max(0, rateLimitResetTime - now);
+    
+    if (timeLeft <= 0) {
+        timerElement.style.display = 'none';
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        return;
+    }
+
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    const separator = Math.floor(Date.now() / 500) % 2 === 0 ? ':' : ' ';
+    
+    timerElement.style.display = 'block';
+    timerElement.querySelector('.timer-display')!.textContent = 
+        `${minutes.toString().padStart(2, '0')}${separator}${seconds.toString().padStart(2, '0')}`;
 }
 
 function initialize() {
