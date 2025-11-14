@@ -23,7 +23,10 @@ A simple web app that lets you fetch random issues from GitHub repositories. Jus
 - CSS
 - TypeScript
 - GitHub API
-- Varius free LLMs
+- Various free LLMs
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## See also
+[issueroulette](https://elijahpotter.dev/issueroulette), A similar, but hosted, tool by [Elijah Potter](https://github.com/elijah-potter).
