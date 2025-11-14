@@ -6,6 +6,11 @@ interface GitHubIssue {
     number: number;
     title: string;
     html_url: string;
+    labels: Array<{
+        name: string;
+        color?: string;
+        [key: string]: any;
+    }>;
     pull_request?: {
         url: string;
     };
@@ -19,6 +24,7 @@ const totalCount = document.getElementById('total-count') as HTMLSpanElement;
 const prsCount = document.getElementById('prs-count') as HTMLSpanElement;
 const issuesCount = document.getElementById('issues-count') as HTMLSpanElement;
 const openIssuesCount = document.getElementById('open-issues-count') as HTMLSpanElement;
+const staleCount = document.getElementById('stale-count') as HTMLSpanElement;
 
 let entryCount = 0; // Counter to track the number of entries
 let prevIssue = -1;
@@ -43,11 +49,16 @@ function updateStatusFields(issues: GitHubIssue[]) {
     const prs = issues.filter(issue => issue.pull_request).length;
     const allIssues = issues.filter(issue => !issue.pull_request).length;
     const openIssues = issues.filter(issue => !issue.pull_request && issue.state === 'open').length;
+    const staleIssues = issues.filter(issue => 
+        !issue.pull_request && 
+        issue.labels.some(label => label.name.toLowerCase() === 'stale')
+    ).length;
 
     totalCount.textContent = `Total: ${total}`;
     prsCount.textContent = `PRs: ${prs}`;
     issuesCount.textContent = `Issues: ${allIssues}`;
     openIssuesCount.textContent = `Open: ${openIssues}`;
+    staleCount.textContent = `Stale: ${staleIssues}`;
 }
 
 function appendOutput(title: string, issueNumber?: number, url?: string, debug?: boolean) {
