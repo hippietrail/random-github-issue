@@ -1,4 +1,4 @@
 /node_modules
 /package-lock.json
-/script.js
+script.js
 .DS_Store
