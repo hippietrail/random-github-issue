@@ -109,6 +109,10 @@ datalist option:hover {
     background-color: #f8f8f8;
 }
 
+#stale-count {
+    display: none;
+}
+
 /* 4. States */
 #button-container button:hover {
     background-color: #d0d0d0;
