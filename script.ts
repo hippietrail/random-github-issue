@@ -59,6 +59,18 @@ function updateStatusFields(issues: GitHubIssue[]) {
     issuesCount.textContent = `Issues: ${allIssues}`;
     openIssuesCount.textContent = `Open: ${openIssues}`;
     staleCount.textContent = `Stale: ${staleIssues}`;
+    if (staleIssues > 0) {
+        const firstStaleIssueColor = issues.find(issue => 
+            !issue.pull_request &&
+            issue.labels.some(label => label.name.toLowerCase() === 'stale')
+        )?.labels.find(label => label.name.toLowerCase() === 'stale')?.color;
+        if (firstStaleIssueColor) {
+            staleCount.style.color = `#${firstStaleIssueColor}`;
+        }
+        staleCount.style.display = 'block';
+    } else {
+        staleCount.style.display = 'none';
+    }
 }
 
 function appendOutput(title: string, issueNumber?: number, url?: string, debug?: boolean) {
