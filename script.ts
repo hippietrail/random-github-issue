@@ -93,9 +93,8 @@ function appendOutput(title: string, issueNumber?: number, url?: string, debug?:
     outputDiv.appendChild(newOutput);
     entryCount++; // Increment the counter
 
-    // Scroll the terminal to the bottom
-    const terminal = document.getElementById('terminal') as HTMLDivElement;
-    terminal.scrollTop = terminal.scrollHeight;
+    // Scroll the output to the bottom
+    outputDiv.scrollTop = outputDiv.scrollHeight;
 }
 
 async function fetchGitHubIssues(repo: string): Promise<GitHubIssue[]> {
