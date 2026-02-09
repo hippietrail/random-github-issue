@@ -73,9 +73,27 @@ function updateStatusFields(issues: GitHubIssue[]) {
     }
 }
 
+function decodeHTMLEntities(text: string): string {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = text;
+    return textarea.value;
+}
+
 function appendOutput(title: string, issueNumber?: number, url?: string, debug?: boolean) {
     const newOutput = document.createElement('div');
-    newOutput.innerHTML = `<a href="${url}" target="_blank" style="color: inherit; text-decoration: none;">${issueNumber !== undefined ? `#${issueNumber} - ` : ''}${title}</a>`;
+    const link = document.createElement('a');
+    
+    if (url) {
+        link.href = url;
+        link.target = '_blank';
+        link.style.color = 'inherit';
+        link.style.textDecoration = 'none';
+    }
+    
+    const prefix = issueNumber !== undefined ? `#${issueNumber} - ` : '';
+    const decodedTitle = decodeHTMLEntities(title);
+    link.textContent = prefix + decodedTitle;
+    newOutput.appendChild(link);
     
     // Alternate background colour for every second entry
     if (entryCount % 2 === 1) {
